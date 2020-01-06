@@ -23,10 +23,13 @@ const weatherColorMap = {
 
 Page({
   data: {
-    nowTemp: '-12',
-    nowWeather:'cloudy',
+    nowTemp: '',
+    nowWeather:'',
     nowWeatherBG:'',
-    forecast:[]
+    forecast:[],
+
+    todayTemp:"",
+    todayDate:""
   },
   onPullDownRefresh() { 
     this.getNow(() => {
@@ -46,42 +49,59 @@ Page({
       },
       success: res => {
         let result = res.data.result;
-        let weather = result.now.weather;
-        
-        console.log(result);
-
-        this.setData({
-          nowTemp: result.now.temp,
-          nowWeather: weatherMap[weather],
-          nowWeatherBG: '/images/' + weather + '-bg.png',
-          forecast:result.forecast
-        })
-
-        let forecast = [];
-        let nowHour = new Date().getHours();
-        let fc = result.forecast;
-        for (let i = 0; i < fc.length;i += 1) {
-          forecast.push (
-            {
-              time: (i * 3 + nowHour) % 24 + ":00",
-              iconPath:"/images/" + fc[i].weather + "-icon.png",
-              temp: fc[i].temp + "°" 
-            }
-          )
-        }
-        forecast[0].time = "now";
-        this.setData({
-          forecast:forecast
-        })
-
-        wx.setNavigationBarColor({
-          frontColor: '#000000',
-          backgroundColor: weatherColorMap[weather]
-        })
+  
+        this.setNow(result);
+        this.setForecast(result);
+        this.setToday(result);
       },
       complete() {
         callBack && callBack();
       }
+    })
+  },
+  setNow(result) {
+    let weather = result.now.weather;
+    this.setData({
+      nowTemp: result.now.temp,
+      nowWeather: weatherMap[weather],
+      nowWeatherBG: '/images/' + weather + '-bg.png'
+    })
+    wx.setNavigationBarColor({
+      frontColor: '#000000',
+      backgroundColor: weatherColorMap[weather]
+    })
+  },
+  setForecast(result) {
+    let forecast = [];
+    let nowHour = new Date().getHours();
+    let fc = result.forecast;
+    for (let i = 0; i < fc.length;i += 1) {
+      forecast.push (
+        {
+          time: (i * 3 + nowHour) % 24 + ":00",
+          iconPath:"/images/" + fc[i].weather + "-icon.png",
+          temp: fc[i].temp + "°" 
+        }
+      )
+    }
+    forecast[0].time = "now";
+    this.setData({
+      forecast:forecast
+    })  
+  },
+  setToday(result) {
+    let t = result.today;
+    console.log(result);
+    let today = new Date();
+
+    this.setData({
+      todayTemp:`${t.minTemp}˚ - ${t.maxTemp}˚`,
+      todayDate:`${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
+    })
+  },
+  onTapWeather() {
+    wx.navigateTo({
+      url: '/pages/list/list',
     })
   }
 }) 
